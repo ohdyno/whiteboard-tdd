@@ -1,40 +1,48 @@
 package io.pivotal.michigan.test;
 
-import io.pivotal.michigan.production.CreateWhiteBoardCommand;
+import io.pivotal.michigan.production.boundary.Gui;
 import io.pivotal.michigan.production.boundary.WhiteboardRepo;
-import io.pivotal.michigan.test.doubles.FakeWhiteboardRepo;
 import io.pivotal.michigan.test.doubles.GuiSpy;
-import org.junit.jupiter.api.BeforeEach;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 public class CreateWhiteboardTest {
-    private WhiteboardRepo repo;
-    private GuiSpy gui;
+    @Test
+    @DisplayName("whiteboard name cannot be empty")
+    public void emptyNameError() {
+        GuiSpy guiSpy = new GuiSpy();
+        createWhiteBoard("", guiSpy, new FakeWhiteboardRepo());
 
-    @BeforeEach
-    public void setUp() {
-        gui = new GuiSpy();
-        repo = new FakeWhiteboardRepo();
+        assertThat(guiSpy.getValidationErrors(), Matchers.contains("name cannot be empty"));
     }
 
     @Test
-    @DisplayName("whiteboard requires name")
-    public void requiresName() {
-        new CreateWhiteBoardCommand().createWhiteboard("", gui, repo);
-        assertThat(gui.getErrors().contains("name required"), is(equalTo(true)));
+    @DisplayName("can create a whiteboard without raising errors")
+    public void nonEmptyNameSuccess() {
+        GuiSpy guiSpy = new GuiSpy();
+        createWhiteBoard("abc", guiSpy, new FakeWhiteboardRepo());
+        assertThat(guiSpy.getValidationErrors(), hasSize(0));
     }
 
     @Test
     @DisplayName("whiteboard name must be unique")
-    public void testNameIsUnique() {
-        new CreateWhiteBoardCommand().createWhiteboard("abc", gui, repo);
-        assertThat(gui.getErrors().contains("name is not unique"), is(equalTo(false)));
-        new CreateWhiteBoardCommand().createWhiteboard("abc", gui, repo);
-        assertThat(gui.getErrors().contains("name is not unique"), is(equalTo(true)));
+    public void uniqueNamesError() {
+        GuiSpy guiSpy = new GuiSpy();
+        WhiteboardRepo fakeRepo = new FakeWhiteboardRepo();
+        createWhiteBoard("abc", guiSpy, fakeRepo);
+        createWhiteBoard("abc", guiSpy, fakeRepo);
+        assertThat(guiSpy.getValidationErrors(), Matchers.contains("name already in use"));
+    }
+
+    private void createWhiteBoard(String name, Gui gui, WhiteboardRepo fakeRepo) {
+        if(name.isEmpty())
+            gui.validationErrorFound("name cannot be empty");
+    }
+
+    private class FakeWhiteboardRepo implements WhiteboardRepo {
     }
 }

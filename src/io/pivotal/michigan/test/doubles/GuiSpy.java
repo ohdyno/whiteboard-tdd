@@ -1,15 +1,15 @@
 package io.pivotal.michigan.test.doubles;
 
-import io.pivotal.michigan.production.boundary.UI;
+import io.pivotal.michigan.production.boundary.Gui;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.util.HashSet;
 
-public class GuiSpy implements UI {
-    private List<String> errors = new ArrayList<>();
+public class GuiSpy implements Gui {
 
-    public Collection<String> getErrors() {
+    private HashSet<String> errors = new HashSet<>();
+
+    public Collection<String> getValidationErrors() {
         return errors;
     }
 
